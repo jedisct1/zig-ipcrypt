@@ -33,19 +33,19 @@ Each variant offers different tradeoffs between security, performance, and forma
 - **Cons**:
   - Not format-preserving
   - 8-byte tweak has lower collision resistance than 16-byte tweak
-  - Birthday bound of 2^32 operations per key
+  - Birthday bound of 2^32 operations per (key,ip)
 
 ### Non-deterministic with AES-XTS
 
 - **Pros**:
   - Resists correlation attacks
   - Highest collision resistance (16-byte tweak)
-  - Birthday bound of 2^64 operations per key
+  - Birthday bound of 2^64 operations per (key,ip)
 - **Cons**:
   - Not format-preserving
   - Largest output size (32 bytes)
   - Requires two AES-128 keys
-  - Slightly slower performance (two AES operations)
+  - Slightly slower performance (two sequential AES operations)
 
 ## Key and Tweak Sizes
 
