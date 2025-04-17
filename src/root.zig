@@ -20,8 +20,8 @@
 //! - `DeterministicNd`: 24 bytes (8-byte tweak + 16-byte ciphertext)
 //! - `DeterministicNdx`: 32 bytes (16-byte tweak + 16-byte ciphertext)
 
-const crypto = std.crypto;
 const std = @import("std");
+const crypto = std.crypto;
 const fmt = std.fmt;
 
 const iputils = @import("iputils.zig");

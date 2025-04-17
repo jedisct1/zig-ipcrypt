@@ -1,6 +1,6 @@
 # zig-ipcrypt
 
-A Zig implementation of the ipcrypt specification for IP address encryption and obfuscation.
+A Zig implementation of the IP address encryption and obfuscation methods specified in the [ipcrypt document](https://datatracker.ietf.org/doc/draft-denis-ipcrypt/) ("Methods for IP Address Encryption and Obfuscation").
 
 ## Overview
 
