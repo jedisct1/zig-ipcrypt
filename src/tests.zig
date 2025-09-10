@@ -4,8 +4,8 @@ const testing = std.testing;
 
 const root = @import("root.zig");
 const Deterministic = root.Deterministic;
-const DeterministicNd = root.DeterministicNd;
-const DeterministicNdx = root.DeterministicNdx;
+const Nd = root.Nd;
+const Ndx = root.Ndx;
 const Pfx = root.Pfx;
 const Ip16 = root.Ip16;
 const max_ip_str_len = root.max_ip_str_len;
@@ -34,7 +34,7 @@ test "nd" {
     _ = try fmt.hexToBytes(&tweak, "b4ecbe30b70898d7");
     const ip = "2001:db8::1";
     const expected = "b4ecbe30b70898d7553ac8974d1b4250eafc4b0aa1f80c96";
-    const deterministic = DeterministicNd.init(key);
+    const deterministic = Nd.init(key);
     const ip16 = try Ip16.fromString(ip);
     const encrypted = deterministic.encryptWithTweak(ip16, tweak);
     const decrypted = deterministic.decrypt(encrypted);
@@ -53,7 +53,7 @@ test "ndx" {
     _ = try fmt.hexToBytes(&tweak, "21bd1834bc088cd2b4ecbe30b70898d7");
     const ip = "2001:db8::1";
     const expected = "21bd1834bc088cd2b4ecbe30b70898d76089c7e05ae30c2d10ca149870a263e4";
-    const deterministic = DeterministicNdx.init(key);
+    const deterministic = Ndx.init(key);
     const ip16 = try Ip16.fromString(ip);
     const encrypted = deterministic.encryptWithTweak(ip16, tweak);
     const decrypted = deterministic.decrypt(encrypted);

@@ -50,9 +50,22 @@ pub fn build(b: *std.Build) void {
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
 
+    // Create test for test vectors
+    const test_vectors_mod = b.createModule(.{
+        .root_source_file = b.path("src/test_vectors.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const test_vectors = b.addTest(.{
+        .root_module = test_vectors_mod,
+    });
+
+    const run_test_vectors = b.addRunArtifact(test_vectors);
+
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
+    test_step.dependOn(&run_test_vectors.step);
 }

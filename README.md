@@ -8,8 +8,8 @@ This library implements four variants of IP address encryption as specified in t
 
 1. **Deterministic** (`Deterministic`): Format-preserving encryption using AES-128
 2. **Prefix-preserving** (`Pfx`): Maintains network prefix relationships using dual AES-128
-3. **Non-deterministic with KIASU-BC** (`DeterministicNd`): Uses an 8-byte tweak
-4. **Non-deterministic with AES-XTS** (`DeterministicNdx`): Uses a 16-byte tweak
+3. **Non-deterministic with KIASU-BC** (`Nd`): Uses an 8-byte tweak
+4. **Non-deterministic with AES-XTS** (`Ndx`): Uses a 16-byte tweak
 
 ## Tradeoffs
 
@@ -64,12 +64,12 @@ Each variant offers different tradeoffs between security, performance, and forma
 
 ## Key and Tweak Sizes
 
-| Variant          | Key Size                              | Tweak Size          | Output Size                                   |
-| ---------------- | ------------------------------------- | ------------------- | --------------------------------------------- |
-| Deterministic    | 16 bytes (128 bits)                   | None                | 16 bytes (format-preserving)                  |
-| Pfx              | 32 bytes (256 bits, two AES-128 keys) | None                | 4 bytes (IPv4) or 16 bytes (IPv6)             |
-| DeterministicNd  | 16 bytes (128 bits)                   | 8 bytes (64 bits)   | 24 bytes (8-byte tweak + 16-byte ciphertext)  |
-| DeterministicNdx | 32 bytes (256 bits, two AES-128 keys) | 16 bytes (128 bits) | 32 bytes (16-byte tweak + 16-byte ciphertext) |
+| Variant       | Key Size                              | Tweak Size          | Output Size                                   |
+| ------------- | ------------------------------------- | ------------------- | --------------------------------------------- |
+| Deterministic | 16 bytes (128 bits)                   | None                | 16 bytes (format-preserving)                  |
+| Pfx           | 32 bytes (256 bits, two AES-128 keys) | None                | 4 bytes (IPv4) or 16 bytes (IPv6)             |
+| Nd            | 16 bytes (128 bits)                   | 8 bytes (64 bits)   | 24 bytes (8-byte tweak + 16-byte ciphertext)  |
+| Ndx           | 32 bytes (256 bits, two AES-128 keys) | 16 bytes (128 bits) | 32 bytes (16-byte tweak + 16-byte ciphertext) |
 
 ## Usage
 
@@ -119,7 +119,7 @@ const ipcrypt = @import("ipcrypt");
 
 // Initialize with a 16-byte key
 const key = [_]u8{0x2b} ** 16;
-const nd = ipcrypt.DeterministicNd.init(key);
+const nd = ipcrypt.Nd.init(key);
 
 // Convert IP address to Ip16 format
 const ip = try ipcrypt.Ip16.fromString("2001:db8::1");
@@ -142,7 +142,7 @@ const ipcrypt = @import("ipcrypt");
 
 // Initialize with a 32-byte key
 const key = [_]u8{0x2b} ** 32;
-const ndx = ipcrypt.DeterministicNdx.init(key);
+const ndx = ipcrypt.Ndx.init(key);
 
 // Convert IP address to Ip16 format
 const ip = try ipcrypt.Ip16.fromString("2001:db8::1");

@@ -3,26 +3,26 @@
 //! This library provides four variants of IP address encryption:
 //! - `Deterministic`: Format-preserving encryption using AES-128
 //! - `Pfx`: Prefix-preserving encryption using dual AES-128
-//! - `DeterministicNd`: Non-deterministic encryption using KIASU-BC with 8-byte tweak
-//! - `DeterministicNdx`: Non-deterministic encryption using AES-XTS with 16-byte tweak
+//! - `Nd`: Non-deterministic encryption using KIASU-BC with 8-byte tweak
+//! - `Ndx`: Non-deterministic encryption using AES-XTS with 16-byte tweak
 //!
 //! Key Sizes:
 //! - `Deterministic`: 16 bytes (128 bits)
 //! - `Pfx`: 32 bytes (256 bits, two AES-128 keys)
-//! - `DeterministicNd`: 16 bytes (128 bits)
-//! - `DeterministicNdx`: 32 bytes (256 bits, two AES-128 keys)
+//! - `Nd`: 16 bytes (128 bits)
+//! - `Ndx`: 32 bytes (256 bits, two AES-128 keys)
 //!
 //! Tweak Sizes:
 //! - `Deterministic`: No tweak used
 //! - `Pfx`: No tweak used
-//! - `DeterministicNd`: 8 bytes (64 bits)
-//! - `DeterministicNdx`: 16 bytes (128 bits)
+//! - `Nd`: 8 bytes (64 bits)
+//! - `Ndx`: 16 bytes (128 bits)
 //!
 //! Output Sizes:
 //! - `Deterministic`: 16 bytes (format-preserving)
 //! - `Pfx`: 4 bytes for IPv4, 16 bytes for IPv6 (prefix-preserving)
-//! - `DeterministicNd`: 24 bytes (8-byte tweak + 16-byte ciphertext)
-//! - `DeterministicNdx`: 32 bytes (16-byte tweak + 16-byte ciphertext)
+//! - `Nd`: 24 bytes (8-byte tweak + 16-byte ciphertext)
+//! - `Ndx`: 32 bytes (16-byte tweak + 16-byte ciphertext)
 
 const std = @import("std");
 const crypto = std.crypto;
@@ -85,20 +85,20 @@ pub const Deterministic = struct {
 /// Key size: 16 bytes (128 bits)
 /// Tweak size: 8 bytes (64 bits)
 /// Output size: 24 bytes (8-byte tweak + 16-byte ciphertext)
-pub const DeterministicNd = struct {
+pub const Nd = struct {
     enc_ctx: AesEncCtx = undefined,
 
-    //// Create a new DeterministicNd instance with the given key.
-    pub fn init(key: [16]u8) DeterministicNd {
+    //// Create a new Nd instance with the given key.
+    pub fn init(key: [16]u8) Nd {
         const enc_ctx = AesEncCtx.init(key);
-        return DeterministicNd{
+        return Nd{
             .enc_ctx = enc_ctx,
         };
     }
 
     /// Encrypt the given IP address using a given tweak.
     /// The tweak must be 8 bytes long and randomly generated.
-    pub fn encryptWithTweak(self: DeterministicNd, ip: Ip16, tweak: [8]u8) [24]u8 {
+    pub fn encryptWithTweak(self: Nd, ip: Ip16, tweak: [8]u8) [24]u8 {
         var out: [24]u8 = undefined;
         out[0..8].* = tweak;
         const mask = AesBlock.fromBytes(&[16]u8{
@@ -113,14 +113,14 @@ pub const DeterministicNd = struct {
     }
 
     /// Encrypt the given IP address using a randomly generated tweak.
-    pub fn encrypt(self: DeterministicNd, ip: Ip16) [32]u8 {
+    pub fn encrypt(self: Nd, ip: Ip16) [32]u8 {
         var tweak: [8]u8 = undefined;
         crypto.random.bytes(&tweak);
         return self.encryptWithTweak(ip, tweak);
     }
 
     //// Decrypt the given ciphertext.
-    pub fn decrypt(self: DeterministicNd, ciphertext: [24]u8) Ip16 {
+    pub fn decrypt(self: Nd, ciphertext: [24]u8) Ip16 {
         const tweak = ciphertext[0..8];
         const mask = AesBlock.fromBytes(&[16]u8{
             tweak[0], tweak[1], 0, 0, tweak[2], tweak[3], 0, 0, tweak[4], tweak[5], 0, 0, tweak[6], tweak[7], 0, 0,
@@ -141,19 +141,19 @@ pub const DeterministicNd = struct {
 /// Key size: 32 bytes (256 bits, two AES-128 keys)
 /// Tweak size: 16 bytes (128 bits)
 /// Output size: 32 bytes (16-byte tweak + 16-byte ciphertext)
-pub const DeterministicNdx = struct {
+pub const Ndx = struct {
     enc1_ctx: AesEncCtx = undefined,
     enc2_ctx: AesEncCtx = undefined,
     dec1_ctx: AesDecCtx = undefined,
     dec2_ctx: AesDecCtx = undefined,
 
-    /// Create a new DeterministicNdx instance with the given key.
-    pub fn init(key: [32]u8) DeterministicNdx {
+    /// Create a new Ndx instance with the given key.
+    pub fn init(key: [32]u8) Ndx {
         const enc1_ctx = AesEncCtx.init(key[0..16].*);
         const dec1_ctx = AesDecCtx.initFromEnc(enc1_ctx);
         const enc2_ctx = AesEncCtx.init(key[16..].*);
         const dec2_ctx = AesDecCtx.initFromEnc(enc2_ctx);
-        return DeterministicNdx{
+        return Ndx{
             .enc1_ctx = enc1_ctx,
             .enc2_ctx = enc2_ctx,
             .dec1_ctx = dec1_ctx,
@@ -163,7 +163,7 @@ pub const DeterministicNdx = struct {
 
     /// Encrypt the given IP address using a given tweak.
     /// The tweak must be 16 bytes long and randomly generated.
-    pub fn encryptWithTweak(self: DeterministicNdx, ip: Ip16, tweak: [16]u8) [32]u8 {
+    pub fn encryptWithTweak(self: Ndx, ip: Ip16, tweak: [16]u8) [32]u8 {
         var encrypted_tweak: [16]u8 = undefined;
         self.enc2_ctx.encrypt(&encrypted_tweak, &tweak);
         var ipx = ip.bytes;
@@ -180,14 +180,14 @@ pub const DeterministicNdx = struct {
     }
 
     /// Encrypt the given IP address using a randomly generated tweak.
-    pub fn encrypt(self: DeterministicNdx, ip: Ip16) [32]u8 {
+    pub fn encrypt(self: Ndx, ip: Ip16) [32]u8 {
         var tweak: [16]u8 = undefined;
         crypto.random.bytes(&tweak);
         return self.encryptWithTweak(ip, tweak);
     }
 
     /// Decrypt the given ciphertext.
-    pub fn decrypt(self: DeterministicNdx, ciphertext: [32]u8) Ip16 {
+    pub fn decrypt(self: Ndx, ciphertext: [32]u8) Ip16 {
         const tweak = ciphertext[0..16];
         var encrypted_tweak: [16]u8 = undefined;
         self.enc2_ctx.encrypt(&encrypted_tweak, tweak);
