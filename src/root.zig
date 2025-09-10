@@ -1,22 +1,26 @@
 //! IP address encryption and obfuscation library implementing the ipcrypt specification.
 //!
-//! This library provides three variants of IP address encryption:
+//! This library provides four variants of IP address encryption:
 //! - `Deterministic`: Format-preserving encryption using AES-128
+//! - `Pfx`: Prefix-preserving encryption using dual AES-128
 //! - `DeterministicNd`: Non-deterministic encryption using KIASU-BC with 8-byte tweak
 //! - `DeterministicNdx`: Non-deterministic encryption using AES-XTS with 16-byte tweak
 //!
 //! Key Sizes:
 //! - `Deterministic`: 16 bytes (128 bits)
+//! - `Pfx`: 32 bytes (256 bits, two AES-128 keys)
 //! - `DeterministicNd`: 16 bytes (128 bits)
 //! - `DeterministicNdx`: 32 bytes (256 bits, two AES-128 keys)
 //!
 //! Tweak Sizes:
 //! - `Deterministic`: No tweak used
+//! - `Pfx`: No tweak used
 //! - `DeterministicNd`: 8 bytes (64 bits)
 //! - `DeterministicNdx`: 16 bytes (128 bits)
 //!
 //! Output Sizes:
 //! - `Deterministic`: 16 bytes (format-preserving)
+//! - `Pfx`: 4 bytes for IPv4, 16 bytes for IPv6 (prefix-preserving)
 //! - `DeterministicNd`: 24 bytes (8-byte tweak + 16-byte ciphertext)
 //! - `DeterministicNdx`: 32 bytes (16-byte tweak + 16-byte ciphertext)
 
@@ -25,6 +29,7 @@ const crypto = std.crypto;
 const fmt = std.fmt;
 
 const iputils = @import("iputils.zig");
+const pfx = @import("pfx.zig");
 
 const AesBlock = crypto.core.aes.Block;
 const Aes128 = crypto.core.aes.Aes128;
@@ -37,6 +42,9 @@ pub const max_ip_str_len = iputils.max_ip_str_len;
 /// A 16-byte representation of an IP address, which can be either IPv4 or IPv6.
 /// This is the common format used by all encryption variants.
 pub const Ip16 = iputils.Ip16;
+
+/// Prefix-preserving encryption scheme.
+pub const Pfx = pfx.Pfx;
 
 /// A deterministic, format-preserving encryption scheme for IP addresses.
 /// Uses AES-128 in a single-block operation.

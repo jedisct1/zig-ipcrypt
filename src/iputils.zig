@@ -50,7 +50,7 @@ pub const Ip16 = struct {
         return try fromAddress(a);
     }
 
-    //// Convert the Ip16 value to a string representation of the IP address.
+    /// Convert the Ip16 value to a string representation of the IP address.
     /// The string will be in the format of either IPv4 or IPv6.
     /// The caller must provide a buffer of sufficient size to hold the string.
     /// The maximum size of the buffer is defined by `max_ip_str_len`.
@@ -58,9 +58,10 @@ pub const Ip16 = struct {
     pub fn toString(self: Ip16, buf: *[max_ip_str_len]u8) []u8 {
         const a = try self.toAddress();
         if (a.any.family == posix.AF.INET) {
-            const b = @as(*const [4]u8, @ptrCast(&a.in.sa.addr));
+            // For IPv4, we can use the simpler approach since we just need dotted decimal
+            const bytes = @as(*const [4]u8, @ptrCast(&a.in.sa.addr));
             return fmt.bufPrint(buf, "{d}.{d}.{d}.{d}", .{
-                b[0], b[1], b[2], b[3],
+                bytes[0], bytes[1], bytes[2], bytes[3],
             }) catch unreachable;
         }
         const big_endian_parts = @as(*align(1) const [8]u16, @ptrCast(&a.in6.sa.addr));
@@ -90,23 +91,35 @@ pub const Ip16 = struct {
             longest_start = 8;
             longest_len = 0;
         }
-        var fb = std.io.fixedBufferStream(buf);
-        var out_stream = fb.writer();
+
+        var pos: usize = 0;
         var i: usize = 0;
         var abbrv = false;
         while (i < native_endian_parts.len) : (i += 1) {
             if (i == longest_start) {
                 if (!abbrv) {
-                    out_stream.writeAll(if (i == 0) "::" else ":") catch unreachable;
+                    if (i == 0) {
+                        buf[pos] = ':';
+                        pos += 1;
+                        buf[pos] = ':';
+                        pos += 1;
+                    } else {
+                        buf[pos] = ':';
+                        pos += 1;
+                    }
                     abbrv = true;
                 }
                 i += longest_len - 1;
                 continue;
             }
             abbrv = false;
-            std.fmt.format(out_stream, "{x}", .{native_endian_parts[i]}) catch unreachable;
-            if (i != native_endian_parts.len - 1) out_stream.writeAll(":") catch unreachable;
+            const part_str = fmt.bufPrint(buf[pos..], "{x}", .{native_endian_parts[i]}) catch unreachable;
+            pos += part_str.len;
+            if (i != native_endian_parts.len - 1) {
+                buf[pos] = ':';
+                pos += 1;
+            }
         }
-        return fb.buffer[0..fb.pos];
+        return buf[0..pos];
     }
 };

@@ -4,11 +4,12 @@ A Zig implementation of the IP address encryption and obfuscation methods specif
 
 ## Overview
 
-This library implements three variants of IP address encryption as specified in the ipcrypt draft:
+This library implements four variants of IP address encryption as specified in the ipcrypt draft:
 
 1. **Deterministic** (`Deterministic`): Format-preserving encryption using AES-128
-2. **Non-deterministic with KIASU-BC** (`DeterministicNd`): Uses an 8-byte tweak
-3. **Non-deterministic with AES-XTS** (`DeterministicNdx`): Uses a 16-byte tweak
+2. **Prefix-preserving** (`Pfx`): Maintains network prefix relationships using dual AES-128
+3. **Non-deterministic with KIASU-BC** (`DeterministicNd`): Uses an 8-byte tweak
+4. **Non-deterministic with AES-XTS** (`DeterministicNdx`): Uses a 16-byte tweak
 
 ## Tradeoffs
 
@@ -23,6 +24,20 @@ Each variant offers different tradeoffs between security, performance, and forma
 - **Cons**:
   - Reveals repeated inputs (same input always produces same output)
   - No protection against correlation attacks
+  - Network structure is completely scrambled
+
+### Prefix-preserving (ipcrypt-pfx)
+
+- **Pros**:
+  - Preserves network prefix relationships (addresses from same subnet share encrypted prefix)
+  - Enables network-level analytics while protecting individual addresses
+  - Maintains native address sizes (4 bytes for IPv4, 16 bytes for IPv6)
+  - Deterministic (allows duplicate detection)
+- **Cons**:
+  - Reveals network structure (by design, for analytics)
+  - Slower than other deterministic methods (bit-by-bit processing)
+  - Requires 32-byte key (two AES-128 keys)
+  - Same input always produces same output
 
 ### Non-deterministic with KIASU-BC
 
@@ -52,6 +67,7 @@ Each variant offers different tradeoffs between security, performance, and forma
 | Variant          | Key Size                              | Tweak Size          | Output Size                                   |
 | ---------------- | ------------------------------------- | ------------------- | --------------------------------------------- |
 | Deterministic    | 16 bytes (128 bits)                   | None                | 16 bytes (format-preserving)                  |
+| Pfx              | 32 bytes (256 bits, two AES-128 keys) | None                | 4 bytes (IPv4) or 16 bytes (IPv6)             |
 | DeterministicNd  | 16 bytes (128 bits)                   | 8 bytes (64 bits)   | 24 bytes (8-byte tweak + 16-byte ciphertext)  |
 | DeterministicNdx | 32 bytes (256 bits, two AES-128 keys) | 16 bytes (128 bits) | 32 bytes (16-byte tweak + 16-byte ciphertext) |
 
@@ -74,6 +90,26 @@ const encrypted = deterministic.encrypt(ip);
 
 // Decrypt
 const decrypted = deterministic.decrypt(encrypted);
+```
+
+### Prefix-Preserving Encryption
+
+```zig
+const ipcrypt = @import("ipcrypt");
+
+// Initialize with a 32-byte key (two AES-128 keys)
+const key = [_]u8{0x01, 0x23, ...}; // 32 bytes, K1 != K2
+const pfx = try ipcrypt.Pfx.init(key);
+
+// Convert IP address to Ip16 format
+const ip = try ipcrypt.Ip16.fromString("10.0.0.47");
+
+// Encrypt - preserves network prefix
+const encrypted = pfx.encrypt(ip);
+// Result: IPs from same network share encrypted prefix
+
+// Decrypt
+const decrypted = pfx.decrypt(encrypted);
 ```
 
 ### Non-deterministic Encryption (KIASU-BC)
@@ -154,3 +190,4 @@ ISC License
 - [AES-128](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)
 - [KIASU-BC](https://eprint.iacr.org/2014/831)
 - [AES-XTS](https://standards.ieee.org/ieee/1619/2041/)
+- [Sum of PRPs](https://link.springer.com/chapter/10.1007/3-540-45539-6_34) (Security basis for ipcrypt-pfx)

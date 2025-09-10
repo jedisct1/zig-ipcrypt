@@ -6,6 +6,7 @@ const root = @import("root.zig");
 const Deterministic = root.Deterministic;
 const DeterministicNd = root.DeterministicNd;
 const DeterministicNdx = root.DeterministicNdx;
+const Pfx = root.Pfx;
 const Ip16 = root.Ip16;
 const max_ip_str_len = root.max_ip_str_len;
 
@@ -60,6 +61,23 @@ test "ndx" {
     var str_buf: [max_ip_str_len]u8 = undefined;
     const encrypted_str = fmt.bytesToHex(encrypted, .lower);
     try testing.expectEqualSlices(u8, &encrypted_str, expected);
+    const decrypted_str = decrypted.toString(&str_buf);
+    try testing.expectEqualSlices(u8, decrypted_str, ip);
+}
+
+test "pfx" {
+    var key: [32]u8 = undefined;
+    _ = try fmt.hexToBytes(&key, "0123456789abcdeffedcba98765432101032547698badcfeefcdab8967452301");
+    const ip = "192.0.2.1";
+    const expected = "100.115.72.131";
+    const pfx = try Pfx.init(key);
+    const ip16 = try Ip16.fromString(ip);
+    const encrypted = pfx.encrypt(ip16);
+    const decrypted = pfx.decrypt(encrypted);
+
+    var str_buf: [max_ip_str_len]u8 = undefined;
+    const encrypted_str = encrypted.toString(&str_buf);
+    try testing.expectEqualSlices(u8, encrypted_str, expected);
     const decrypted_str = decrypted.toString(&str_buf);
     try testing.expectEqualSlices(u8, decrypted_str, ip);
 }
