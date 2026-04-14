@@ -34,16 +34,26 @@ test "nd" {
     _ = try fmt.hexToBytes(&tweak, "b4ecbe30b70898d7");
     const ip = "2001:db8::1";
     const expected = "b4ecbe30b70898d7553ac8974d1b4250eafc4b0aa1f80c96";
-    const deterministic = Nd.init(key);
+    const nd = Nd.init(key);
     const ip16 = try Ip16.fromString(ip);
-    const encrypted = deterministic.encryptWithTweak(ip16, tweak);
-    const decrypted = deterministic.decrypt(encrypted);
+    const encrypted = nd.encryptWithTweak(ip16, tweak);
+    const decrypted = nd.decrypt(encrypted);
 
     var str_buf: [max_ip_str_len]u8 = undefined;
     const encrypted_str = fmt.bytesToHex(encrypted, .lower);
     try testing.expectEqualSlices(u8, &encrypted_str, expected);
     const decrypted_str = decrypted.toString(&str_buf);
     try testing.expectEqualSlices(u8, decrypted_str, ip);
+}
+
+test "nd encrypt with random tweak" {
+    var key: [16]u8 = undefined;
+    _ = try fmt.hexToBytes(&key, "2b7e151628aed2a6abf7158809cf4f3c");
+    const nd = Nd.init(key);
+    const ip16 = try Ip16.fromString("2001:db8::1");
+    const encrypted = nd.encrypt(ip16, testing.io);
+    const decrypted = nd.decrypt(encrypted);
+    try testing.expectEqual(ip16, decrypted);
 }
 
 test "ndx" {
@@ -53,16 +63,26 @@ test "ndx" {
     _ = try fmt.hexToBytes(&tweak, "21bd1834bc088cd2b4ecbe30b70898d7");
     const ip = "2001:db8::1";
     const expected = "21bd1834bc088cd2b4ecbe30b70898d76089c7e05ae30c2d10ca149870a263e4";
-    const deterministic = Ndx.init(key);
+    const ndx = Ndx.init(key);
     const ip16 = try Ip16.fromString(ip);
-    const encrypted = deterministic.encryptWithTweak(ip16, tweak);
-    const decrypted = deterministic.decrypt(encrypted);
+    const encrypted = ndx.encryptWithTweak(ip16, tweak);
+    const decrypted = ndx.decrypt(encrypted);
 
     var str_buf: [max_ip_str_len]u8 = undefined;
     const encrypted_str = fmt.bytesToHex(encrypted, .lower);
     try testing.expectEqualSlices(u8, &encrypted_str, expected);
     const decrypted_str = decrypted.toString(&str_buf);
     try testing.expectEqualSlices(u8, decrypted_str, ip);
+}
+
+test "ndx encrypt with random tweak" {
+    var key: [32]u8 = undefined;
+    _ = try fmt.hexToBytes(&key, "2b7e151628aed2a6abf7158809cf4f3c3c4fcf098815f7aba6d2ae2816157e2b");
+    const ndx = Ndx.init(key);
+    const ip16 = try Ip16.fromString("2001:db8::1");
+    const encrypted = ndx.encrypt(ip16, testing.io);
+    const decrypted = ndx.decrypt(encrypted);
+    try testing.expectEqual(ip16, decrypted);
 }
 
 test "pfx" {

@@ -124,8 +124,8 @@ const nd = ipcrypt.Nd.init(key);
 // Convert IP address to Ip16 format
 const ip = try ipcrypt.Ip16.fromString("2001:db8::1");
 
-// Encrypt with random tweak
-const encrypted = nd.encrypt(ip);
+// Encrypt with random tweak (requires std.Io for randomness)
+const encrypted = nd.encrypt(ip, io);
 
 // Encrypt with specific tweak
 const tweak = [_]u8{0x2b} ** 8;
@@ -147,8 +147,8 @@ const ndx = ipcrypt.Ndx.init(key);
 // Convert IP address to Ip16 format
 const ip = try ipcrypt.Ip16.fromString("2001:db8::1");
 
-// Encrypt with random tweak
-const encrypted = ndx.encrypt(ip);
+// Encrypt with random tweak (requires std.Io for randomness)
+const encrypted = ndx.encrypt(ip, io);
 
 // Encrypt with specific tweak
 const tweak = [_]u8{0x2b} ** 16;
@@ -160,24 +160,22 @@ const decrypted = ndx.decrypt(encrypted);
 
 ## Building
 
-Add this to your `build.zig.zon`:
+Requires Zig 0.16 or later.
 
-```zig
-.{
-    .name = "ipcrypt",
-    .url = "https://github.com/yourusername/zig-ipcrypt/archive/refs/tags/v0.1.0.tar.gz",
-    .hash = "1220...",
-}
+Add `zig-ipcrypt` as a dependency in your `build.zig.zon` using `zig fetch`:
+
+```sh
+zig fetch --save git+https://github.com/jedisct1/zig-ipcrypt
 ```
 
-Then in your `build.zig`:
+Then in your `build.zig`, import the module:
 
 ```zig
-const ipcrypt = b.dependency("ipcrypt", .{
+const ipcrypt_dep = b.dependency("ipcrypt", .{
     .target = target,
     .optimize = optimize,
 });
-exe.addModule("ipcrypt", ipcrypt.module("ipcrypt"));
+exe.root_module.addImport("ipcrypt", ipcrypt_dep.module("ipcrypt"));
 ```
 
 ## License

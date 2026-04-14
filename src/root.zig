@@ -113,9 +113,9 @@ pub const Nd = struct {
     }
 
     /// Encrypt the given IP address using a randomly generated tweak.
-    pub fn encrypt(self: Nd, ip: Ip16) [32]u8 {
+    pub fn encrypt(self: Nd, ip: Ip16, io: std.Io) [24]u8 {
         var tweak: [8]u8 = undefined;
-        crypto.random.bytes(&tweak);
+        io.random(&tweak);
         return self.encryptWithTweak(ip, tweak);
     }
 
@@ -180,9 +180,9 @@ pub const Ndx = struct {
     }
 
     /// Encrypt the given IP address using a randomly generated tweak.
-    pub fn encrypt(self: Ndx, ip: Ip16) [32]u8 {
+    pub fn encrypt(self: Ndx, ip: Ip16, io: std.Io) [32]u8 {
         var tweak: [16]u8 = undefined;
-        crypto.random.bytes(&tweak);
+        io.random(&tweak);
         return self.encryptWithTweak(ip, tweak);
     }
 
