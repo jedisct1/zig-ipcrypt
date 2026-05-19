@@ -5,7 +5,7 @@ const net = std.Io.net;
 const mem = std.mem;
 
 const native_endian = builtin.target.cpu.arch.endian();
-const ipv4_in_ipv6_prefix = [_]u8{0} ** 10 ++ [_]u8{ 0xff, 0xff };
+const ipv4_in_ipv6_prefix = @as([10]u8, @splat(0)) ++ [_]u8{ 0xff, 0xff };
 pub const max_ip_str_len = 39;
 
 /// A 16-byte representation of an IP address, which can be either IPv4 or IPv6.
