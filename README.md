@@ -184,7 +184,7 @@ ISC License
 
 ## References
 
-- [ipcrypt specification](https://github.com/jedisct1/draft-denis-ipcrypt)
+- [ipcrypt specification](https://github.com/ipcrypt-std/draft-denis-ipcrypt)
 - [AES-128](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.197.pdf)
 - [KIASU-BC](https://eprint.iacr.org/2014/831)
 - [AES-XTS](https://standards.ieee.org/ieee/1619/2041/)
